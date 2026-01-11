@@ -3,9 +3,10 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { PrismaService } from './prisma.service'; // <--- 1. 引入它
 import { TripsModule } from './trips/trips.module';
+import { AiModule } from './ai/ai.module';
 
 @Module({
-  imports: [TripsModule],
+  imports: [TripsModule, AiModule],
   controllers: [AppController],
   providers: [
     AppService,

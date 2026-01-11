@@ -6,14 +6,40 @@ import axios from 'axios'
 const route = useRoute()
 const tripId = route.params.id as string
 const trip = ref<any>(null)
+const isGenerating = ref(false) 
 
-onMounted(async () => {
+
+const fetchTrip = async () => {
   try {
     const res = await axios.get(`http://localhost:3001/trips/${tripId}`)
     trip.value = res.data
   } catch (e) {
     console.error(e)
   }
+}
+
+// 新增：点击 AI 生成按钮触发
+const generateAiPlan = async () => {
+  if (isGenerating.value) return // 防止重复点击
+  
+  isGenerating.value = true
+  try {
+    // 1. 调用后端接口
+    await axios.post(`http://localhost:3001/trips/${tripId}/generate-plan`)
+    
+    // 2. 成功后，重新获取最新数据 (这样页面上就会显示出活动了)
+    await fetchTrip()
+    alert('✨ AI Planing Success! The itinerary has been updated.')
+  } catch (e) {
+    alert('Generate failed, please check the backend console for errors.')
+    console.error(e)
+  } finally {
+    isGenerating.value = false
+  }
+}
+
+onMounted(() => {
+  fetchTrip()
 })
 </script>
 
@@ -36,39 +62,62 @@ onMounted(async () => {
           </p>
         </div>
         
-        <button class="bg-purple-600 text-white px-6 py-3 rounded-xl font-bold shadow-lg hover:bg-purple-700 transition flex items-center gap-2">
-          ✨ AI 生成行程
+        <button 
+          @click="generateAiPlan"
+          :disabled="isGenerating"
+          class="bg-purple-600 hover:bg-purple-700 disabled:bg-purple-300 text-white px-6 py-3 rounded-xl font-bold shadow-lg transition flex items-center gap-2"
+        >
+          <span v-if="isGenerating">🔮 Thinking...</span>
+          <span v-else>✨ AI Generate Itinerary</span>
         </button>
       </div>
     </header>
 
-    <div class="space-y-6">
+    <div class="space-y-8">
       <div 
         v-for="day in trip.days" 
         :key="day.id"
-        class="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm"
+        class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden"
       >
-        <div class="bg-gray-50 p-4 border-b border-gray-100 flex justify-between items-center">
-          <h3 class="font-bold text-lg text-gray-800">
-            Day {{ day.dayIndex + 1 }} 
-            <span class="text-gray-500 text-sm font-normal ml-2">
-              {{ new Date(day.date).toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' }) }}
+        <div class="bg-gray-50/50 p-4 border-b border-gray-100 flex justify-between items-center">
+          <h3 class="font-bold text-lg text-gray-800 flex items-center gap-2">
+            <span class="bg-black text-white w-8 h-8 rounded-lg flex items-center justify-center text-sm">
+              D{{ day.dayIndex + 1 }}
             </span>
+            <span>{{ new Date(day.date).toLocaleDateString(undefined, {weekday: 'short', month: 'short', day: 'numeric'}) }}</span>
           </h3>
-          <button class="text-blue-600 text-sm hover:underline">+ add activity</button>
         </div>
 
-        <div class="p-6 min-h-[100px] flex items-center justify-center text-gray-400 border-dashed">
-          <div v-if="!day.activities || day.activities.length === 0">
-             No activities yet, click the AI button on the top right to generate 👆
+        <div class="p-6">
+          <div v-if="!day.activities || day.activities.length === 0" class="text-center py-8 text-gray-400 border-2 border-dashed border-gray-100 rounded-xl">
+            There are no activities yet. Click the AI button in the top right 👆
           </div>
-          <div v-else>
-            {{ day.activities }}
+
+          <div v-else class="space-y-6">
+            <div 
+              v-for="(activity, index) in day.activities" 
+              :key="activity.id"
+              class="flex gap-4 group"
+            >
+              <div class="flex flex-col items-center mt-1">
+                <div class="w-3 h-3 rounded-full bg-purple-200 group-hover:bg-purple-500 transition"></div>
+                <div class="w-0.5 h-full bg-gray-100 mt-1" v-if="index !== day.activities.length - 1"></div>
+              </div>
+              
+              <div class="pb-2">
+                <h4 class="font-bold text-gray-800 text-lg">{{ activity.title }}</h4>
+                <p class="text-sm text-gray-500 mb-1 flex items-center gap-1">
+                  📍 {{ activity.location }}
+                </p>
+                <p class="text-gray-600 leading-relaxed">{{ activity.description }}</p>
+              </div>
+            </div>
           </div>
         </div>
+
       </div>
     </div>
 
   </div>
-  <div v-else class="text-center p-20 text-gray-500">Loading...</div>
+  <div v-else class="text-center p-20">Loading...</div>
 </template>

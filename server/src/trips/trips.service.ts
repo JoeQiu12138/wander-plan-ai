@@ -71,6 +71,46 @@ export class TripsService {
       },
     });
   }
+
+  // 核心：把 AI 生成的 JSON 保存到数据库的 Activity 表里
+  async saveAiPlan(tripId: string, plan: any[]) {
+    // 1. 先找出这个 Trip 所有的 Days
+    const trip = await this.prisma.trip.findUnique({
+      where: { id: tripId },
+      include: { days: { orderBy: { dayIndex: 'asc' } } }
+    });
+
+    if (!trip) throw new Error('Trip not found');
+
+    // 2. 遍历每一天，把 AI 的活动填进去
+    // 注意：AI 返回的 day 是从 1 开始，数据库 dayIndex 是从 0 开始
+    for (const dayPlan of plan) {
+      const dayIndex = dayPlan.day - 1;
+
+      // 找到对应的数据库记录
+      if (trip.days[dayIndex]) {
+        const dayId = trip.days[dayIndex].id;
+
+        // 先清空这一天旧的活动 (可选，防止重复生成堆积)
+        await this.prisma.tripActivity.deleteMany({ where: { tripDayId: dayId }});
+
+        // 插入新活动
+        for (const activity of dayPlan.activities) {
+          await this.prisma.tripActivity.create({
+            data: {
+              title: activity.title,
+              description: activity.description,
+              location: activity.location,
+              tripDayId: dayId,
+            },
+          });
+        }
+      }
+    }
+
+    return { success: true };
+  }
+
   update(id: number, updateTripDto: UpdateTripDto) { return `This action updates a #${id} trip`; }
   remove(id: number) { return `This action removes a #${id} trip`; }
 }
