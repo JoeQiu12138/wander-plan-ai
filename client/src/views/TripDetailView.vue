@@ -38,6 +38,29 @@ const generateAiPlan = async () => {
   }
 }
 
+const addActivity = async (dayId: string) => {
+  // 1. 简单的获取用户输入 (为了省去写 Modal 的代码)
+  const title = prompt('请输入活动名称 (例如: 吃拉面)')
+  if (!title) return
+  
+  const location = prompt('请输入地点 (可选)', '未知地点') || ''
+
+  try {
+    // 2. 发送给后端
+    await axios.post('http://localhost:3001/trips/activities', {
+      tripDayId: dayId,
+      title,
+      location,
+      description: 'User added activity' 
+    })
+
+    // 3. 刷新数据
+    await fetchTrip()
+  } catch (e) {
+    alert('add activity failed, check server log')
+  }
+}
+
 onMounted(() => {
   fetchTrip()
 })
@@ -79,13 +102,17 @@ onMounted(() => {
         :key="day.id"
         class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden"
       >
-        <div class="bg-gray-50/50 p-4 border-b border-gray-100 flex justify-between items-center">
-          <h3 class="font-bold text-lg text-gray-800 flex items-center gap-2">
-            <span class="bg-black text-white w-8 h-8 rounded-lg flex items-center justify-center text-sm">
-              D{{ day.dayIndex + 1 }}
-            </span>
-            <span>{{ new Date(day.date).toLocaleDateString(undefined, {weekday: 'short', month: 'short', day: 'numeric'}) }}</span>
-          </h3>
+        
+        <div class="bg-gray-50 p-4 border-b border-gray-100 flex justify-between items-center">
+          <h3 class="...">
+            </h3>
+          
+          <button 
+            @click="addActivity(day.id)"
+            class="text-blue-600 text-sm hover:underline hover:bg-blue-50 px-3 py-1 rounded-lg transition"
+          >
+            + 添加活动
+          </button>
         </div>
 
         <div class="p-6">

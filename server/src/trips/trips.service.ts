@@ -111,6 +111,23 @@ export class TripsService {
     return { success: true };
   }
 
+  async addActivity(tripDayId: string, data: { title: string; location?: string; description?: string }) {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+    return this.prisma.tripActivity.create({
+      data: {
+        tripDayId, // 关联到具体某一天
+        title: data.title,
+        location: data.location,
+        description: data.description,
+      },
+    });
+  }
+
   update(id: number, updateTripDto: UpdateTripDto) { return `This action updates a #${id} trip`; }
-  remove(id: number) { return `This action removes a #${id} trip`; }
+  // 删除行程
+  async remove(id: string) {
+    return this.prisma.trip.delete({
+      where: { id },
+    });
+  }
 }

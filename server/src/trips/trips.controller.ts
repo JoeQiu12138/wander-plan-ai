@@ -17,6 +17,11 @@ export class TripsController {
     return this.tripsService.create(createTripDto);
   }
 
+  @Post('activities')
+  addActivity(@Body() body: { tripDayId: string; title: string; location?: string; description?: string }) {
+    return this.tripsService.addActivity(body.tripDayId, body);
+  }
+
   // --- 新增：核心功能 "生成并保存" ---
   @Post(':id/generate-plan')
   async generatePlan(@Param('id') id: string) {
@@ -52,6 +57,6 @@ export class TripsController {
 
   @Delete(':id')
   remove(@Param('id') id: string) {
-    return this.tripsService.remove(+id);
+    return this.tripsService.remove(id);
   }
 }
