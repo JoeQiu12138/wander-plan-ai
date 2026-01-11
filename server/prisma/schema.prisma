@@ -1,0 +1,48 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+// server/prisma/schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// 1. 用户表
+model User {
+  id        String   @id @default(uuid()) // 自动生成 UUID
+  email     String   @unique
+  password  String   // 存加密后的哈希值
+  name      String?
+  avatar    String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // 关系：一个用户可以创建很多行程
+  trips     Trip[]
+}
+
+// 2. 行程表
+model Trip {
+  id          String   @id @default(uuid())
+  title       String
+  destination String?  // 目的地名称
+  startDate   DateTime
+  endDate     DateTime
+  description String?
+  isPublic    Boolean  @default(false)
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // 关系：行程属于谁
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+}
