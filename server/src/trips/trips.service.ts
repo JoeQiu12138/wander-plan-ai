@@ -10,24 +10,40 @@ export class TripsService {
 
   // 创建行程
   async create(createTripDto: CreateTripDto) {
+    const startDate = new Date(createTripDto.startDate);
+    const endDate = new Date(createTripDto.endDate);
+
+    // 1. 计算旅行总天数 (结束日期 - 开始日期)
+    const diffTime = Math.abs(endDate.getTime() - startDate.getTime());
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+
+    // 2. 准备好每一天的数据
+    const daysData: { dayIndex: number; date: Date }[] = [];
+    for (let i = 0; i < diffDays; i++) {
+      const currentDay = new Date(startDate);
+      currentDay.setDate(startDate.getDate() + i);
+      daysData.push({
+        dayIndex: i,
+        date: currentDay,
+      });
+    }
+
+    // 3. 写入数据库 (同时创建 Trip 和 它的 Days)
     return this.prisma.trip.create({
       data: {
         title: createTripDto.title,
         destination: createTripDto.destination,
-        startDate: new Date(createTripDto.startDate), // 把字符串转成日期对象
-        endDate: new Date(createTripDto.endDate),
-        // 这里有一个临时操作：因为我们还没做登录，我们需要先创建一个假用户，
-        // 或者让数据库直接关联到一个已存在的 User ID。
-        // 为了演示方便，我们这里先写死关联到一个新创建的用户，或者你之后手动改
+        startDate: startDate,
+        endDate: endDate,
         user: {
           connectOrCreate: {
             where: { email: 'demo@example.com' },
-            create: {
-              email: 'demo@example.com',
-              password: 'hashed_password', // 暂时随便写
-              name: 'Demo User',
-            },
+            create: { email: 'demo@example.com', password: 'pwd', name: 'Demo' }
           },
+        },
+        // 关键：这里顺便把 Days 也创建了
+        days: {
+          create: daysData,
         },
       },
     });
@@ -42,7 +58,19 @@ export class TripsService {
   }
 
   // 下面这三个暂时先不动，以后再写
-  findOne(id: number) { return `This action returns a #${id} trip`; }
+  // 查找单个行程
+
+  async findOne(id: string) {
+    return this.prisma.trip.findUnique({
+      where: { id },
+      include: {
+        days: {
+          include: { activities: true }, // 把每一天里的活动也查出来
+          orderBy: { dayIndex: 'asc' }, // 按第1天、第2天排序
+        },
+      },
+    });
+  }
   update(id: number, updateTripDto: UpdateTripDto) { return `This action updates a #${id} trip`; }
   remove(id: number) { return `This action removes a #${id} trip`; }
 }

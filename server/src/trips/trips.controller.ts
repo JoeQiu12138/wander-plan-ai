@@ -19,7 +19,7 @@ export class TripsController {
 
   @Get(':id')
   findOne(@Param('id') id: string) {
-    return this.tripsService.findOne(+id);
+    return this.tripsService.findOne(id);
   }
 
   @Patch(':id')

@@ -45,4 +45,30 @@ model Trip {
   // 关系：行程属于谁
   userId      String
   user        User     @relation(fields: [userId], references: [id])
+
+  days        TripDay[]
+}
+
+model TripDay {
+  id        String   @id @default(uuid())
+  dayIndex  Int      // 第几天 (0, 1, 2...)
+  date      DateTime // 具体日期
+  
+  tripId    String
+  trip      Trip     @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  
+  activities TripActivity[] // 这一天里的活动
+}
+
+model TripActivity {
+  id          String   @id @default(uuid())
+  title       String   // 活动名称 (e.g. 参观雷门)
+  description String?  // 备注
+  startTime   DateTime?
+  endTime     DateTime?
+  location    String?  // 地点名称或坐标 JSON
+  price       Float?   // 预算
+  
+  tripDayId   String
+  tripDay     TripDay  @relation(fields: [tripDayId], references: [id], onDelete: Cascade)
 }
