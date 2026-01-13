@@ -165,7 +165,7 @@ The application follows a classic **Client-Server-Database** 3-tier architecture
 ```mermaid
 graph TD
     User[User] -->|HTTP/HTTPS| Client["Client (Vue 3 + Vite)"]
-    Client -->|REST API| Server[Server (NestJS)]
+    Client -->|REST API| Server["Server (NestJS)"]
     
     subgraph Backend Services
         Server -->|ORM / SQL| DB[(PostgreSQL)]
