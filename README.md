@@ -157,10 +157,109 @@ wander-plan-ai/
 * [ ] 🧠 **Real AI Integration**: Switch from Mock Mode to GPT-4 for advanced personalization.
 * [ ] 📱 **Mobile Adaptation**: Optimize responsive design for mobile devices.
 
----
 
 
+
+
+
+## 🏗️ System Architecture & Design
+
+### 1. High-Level Architecture
+The application follows a classic **Client-Server-Database** 3-tier architecture, enhanced with an external AI service integration.
+
+```mermaid
+graph TD
+    User[User] -->|HTTP/HTTPS| Client[Client (Vue 3 + Vite)]
+    Client -->|REST API| Server[Server (NestJS)]
+    
+    subgraph Backend Services
+        Server -->|ORM / SQL| DB[(PostgreSQL)]
+        Server -->|Prompt Engineering| AI_Service[AI Service Module]
+    end
+    
+    subgraph External
+        AI_Service -.->|API Call| OpenAI[OpenAI / LLM Provider]
+    end
 
 ```
 
+### 2. Database Schema (ER Diagram)
+
+The database is designed to handle trip data hierarchically. A `Trip` contains multiple `TripDay` records, and each day contains multiple `TripActivity` records.
+
+```mermaid
+erDiagram
+    TRIP ||--|{ TRIP_DAY : contains
+    TRIP_DAY ||--|{ TRIP_ACTIVITY : contains
+
+    TRIP {
+        string id PK
+        string title
+        string destination
+        datetime startDate
+        datetime endDate
+        boolean isPublic
+    }
+
+    TRIP_DAY {
+        string id PK
+        int dayIndex
+        datetime date
+        string tripId FK
+    }
+
+    TRIP_ACTIVITY {
+        string id PK
+        string title
+        string description
+        string location
+        string tripDayId FK
+    }
+
 ```
+
+### 3. AI Generation Sequence Flow
+
+The core feature "AI Itinerary Generation" involves a complex data flow ensuring data persistence and UI reactivity.
+
+```mermaid
+sequenceDiagram
+    participant U as User
+    participant FE as Frontend (Vue)
+    participant BE as Backend (NestJS)
+    participant AI as AI Service
+    participant DB as PostgreSQL
+
+    U->>FE: Click "Generate AI Plan"
+    FE->>BE: POST /trips/:id/generate-plan
+    BE->>DB: Fetch Trip Details (Destination, Days)
+    DB-->>BE: Return Trip Data
+    
+    BE->>AI: Send Prompt (Context + JSON Format Requirement)
+    
+    alt Mock Mode
+        AI-->>AI: Simulate Network Delay (1.5s)
+        AI-->>BE: Return Mock JSON Data
+    else Production Mode
+        AI->>OpenAI: API Request (GPT-3.5/4)
+        OpenAI-->>AI: Return Generated JSON
+    end
+
+    BE->>BE: Parse & Validate JSON
+    BE->>DB: Save Activities to Database
+    DB-->>BE: Confirm Save
+    BE-->>FE: Return Success & Updated Data
+    FE-->>U: Update UI with New Activities
+
+```
+
+## 🧩 Use Cases
+
+| Actor | Action | System Behavior |
+| --- | --- | --- |
+| **User** | **Create Trip** | System calculates the duration based on start/end dates and initializes empty `TripDay` records in the database. |
+| **User** | **Generate Plan (AI)** | Backend constructs a structured prompt, calls the LLM, and parses the JSON response into persistent `TripActivity` records. |
+| **User** | **Manual Edit** | Users can manually add specific activities (e.g., "Visit Friend") to any specific day alongside AI-generated ones. |
+| **User** | **Delete Trip** | Cascading delete ensures that when a trip is removed, all associated days and activities are cleaned up automatically. |
+
+
