@@ -148,14 +148,9 @@ wander-plan-ai/
 
 ```
 
----
 
-## 🗺️ Roadmap
 
-* [ ] 🗺️ **Map Integration**: Visualize routes using Mapbox or Google Maps.
-* [ ] 🔐 **User Auth**: Implement JWT Authentication for multi-user data isolation.
-* [ ] 🧠 **Real AI Integration**: Switch from Mock Mode to GPT-4 for advanced personalization.
-* [ ] 📱 **Mobile Adaptation**: Optimize responsive design for mobile devices.
+
 
 
 
@@ -169,7 +164,7 @@ The application follows a classic **Client-Server-Database** 3-tier architecture
 
 ```mermaid
 graph TD
-    User[User] -->|HTTP/HTTPS| Client[Client (Vue 3 + Vite)]
+    User[User] -->|HTTP/HTTPS| Client["Client (Vue 3 + Vite)"]
     Client -->|REST API| Server[Server (NestJS)]
     
     subgraph Backend Services
@@ -263,3 +258,9 @@ sequenceDiagram
 | **User** | **Delete Trip** | Cascading delete ensures that when a trip is removed, all associated days and activities are cleaned up automatically. |
 
 
+## 🗺️ Roadmap
+
+* [ ] 🗺️ **Map Integration**: Visualize routes using Mapbox or Google Maps.
+* [ ] 🔐 **User Auth**: Implement JWT Authentication for multi-user data isolation.
+* [ ] 🧠 **Real AI Integration**: Switch from Mock Mode to GPT-4 for advanced personalization.
+* [ ] 📱 **Mobile Adaptation**: Optimize responsive design for mobile devices.
