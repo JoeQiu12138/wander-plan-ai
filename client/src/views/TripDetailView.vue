@@ -135,7 +135,7 @@ onMounted(() => {
             @click="addActivity(day.id)"
             class="text-blue-600 text-sm hover:underline hover:bg-blue-50 px-3 py-1 rounded-lg transition"
           >
-            + 添加活动
+            + Add Activity
           </button>
         </div>
 
