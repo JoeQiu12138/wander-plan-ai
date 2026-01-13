@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import axios from 'axios'
 
 const route = useRoute()
+const router = useRouter()
 const tripId = route.params.id as string
 const trip = ref<any>(null)
 const isGenerating = ref(false) 
@@ -61,6 +62,23 @@ const addActivity = async (dayId: string) => {
   }
 }
 
+const deleteCurrentTrip = async () => {
+  // 双重确认，防止手滑
+  if (!confirm(`Are you sure you want to delete the trip "${trip.value.title}"?\nThis action cannot be undone!`)) return
+
+  try {
+    // 调用删除接口
+    await axios.delete(`http://localhost:3001/trips/${tripId}`)
+    
+    // 成功后，强制跳转回首页
+    alert('Deleted successfully')
+    router.replace('/') 
+  } catch (e) {
+    alert('Delete failed, please try again later')
+    console.error(e)
+  }
+}
+
 onMounted(() => {
   fetchTrip()
 })
@@ -75,6 +93,12 @@ onMounted(() => {
       <div class="flex items-center gap-2 text-sm text-gray-500 mb-2">
         <a href="/" class="hover:text-blue-600 transition">&larr; Back to list</a>
       </div>
+      <button 
+          @click="deleteCurrentTrip"
+          class="text-red-400 hover:text-red-600 hover:bg-red-50 px-3 py-1 rounded-lg text-sm transition flex items-center gap-1"
+        >
+          🗑️ Delete this trip
+        </button>
       <div class="flex justify-between items-start">
         <div>
           <h1 class="text-4xl font-bold text-gray-900">{{ trip.title }}</h1>

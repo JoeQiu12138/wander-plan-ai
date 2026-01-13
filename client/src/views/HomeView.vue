@@ -67,20 +67,7 @@ onMounted(() => {
   fetchTrips()
 })
 
-const deleteTrip = async (id: string, event: Event) => {
-  // 阻止冒泡：防止点击删除时同时也触发了“跳转详情页”
-  // (虽然后面我们在模板里也会加 @click.stop，这里双重保险)
-  
-  if (!confirm('确定要删除这个行程吗？删除后无法恢复。')) return
 
-  try {
-    await axios.delete(`http://localhost:3001/trips/${id}`)
-    // 成功后，在本地数组里把这条删掉，这样不用刷新页面
-    trips.value = trips.value.filter(t => t.id !== id)
-  } catch (e) {
-    alert('删除失败')
-  }
-}
 </script>
 
 <template>
@@ -107,13 +94,7 @@ const deleteTrip = async (id: string, event: Event) => {
           @click="router.push(`/trips/${trip.id}`)"
           class="bg-white p-6 rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition cursor-pointer group"
         >
-          <button 
-            @click.stop="deleteTrip(trip.id, $event)"
-            class="absolute top-4 right-4 text-gray-300 hover:text-red-500 transition p-2"
-            title="delete trip"
-          >
-            🗑️
-          </button>
+          
 
           <div class="flex justify-between items-start">
             <h3 class="text-xl font-bold text-gray-800 group-hover:text-blue-600 transition">
