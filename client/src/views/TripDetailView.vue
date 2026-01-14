@@ -8,6 +8,7 @@ const router = useRouter()
 const tripId = route.params.id as string
 const trip = ref<any>(null)
 const isGenerating = ref(false) 
+const editingActivity = ref<any>(null) // 如果不为 null，说明正在编辑，显示弹窗
 
 
 const fetchTrip = async () => {
@@ -41,10 +42,10 @@ const generateAiPlan = async () => {
 
 const addActivity = async (dayId: string) => {
   // 1. 简单的获取用户输入 (为了省去写 Modal 的代码)
-  const title = prompt('请输入活动名称 (例如: 吃拉面)')
+  const title = prompt('please enter activity title (e.g. eat ramen)')
   if (!title) return
-  
-  const location = prompt('请输入地点 (可选)', '未知地点') || ''
+
+  const location = prompt('please enter location (optional)', 'unknown location') || ''
 
   try {
     // 2. 发送给后端
@@ -75,6 +76,45 @@ const deleteCurrentTrip = async () => {
     router.replace('/') 
   } catch (e) {
     alert('Delete failed, please try again later')
+    console.error(e)
+  }
+}
+
+const deleteActivity = async (activityId: string) => {
+  if (!confirm('Are you sure you want to remove this activity?')) return
+  
+  try {
+    await axios.delete(`http://localhost:3001/trips/activities/${activityId}`)
+    // 成功后刷新数据，让它从界面消失
+    await fetchTrip()
+  } catch (e) {
+    console.error(e)
+    alert('Remove activity failed, check server log')
+  }
+}
+
+// 1. 打开编辑窗口 (把当前活动的数据填进去)
+const openEditModal = (activity: any) => {
+  // 复制一份数据，防止直接修改界面导致取消编辑后回不去
+  editingActivity.value = { ...activity }
+}
+
+// 2. 保存修改
+const saveActivity = async () => {
+  if (!editingActivity.value) return
+
+  try {
+    await axios.patch(`http://localhost:3001/trips/activities/${editingActivity.value.id}`, {
+      title: editingActivity.value.title,
+      location: editingActivity.value.location,
+      description: editingActivity.value.description
+    })
+    
+    // 成功后：关闭弹窗，刷新列表
+    editingActivity.value = null
+    await fetchTrip()
+  } catch (e) {
+    alert('保存失败')
     console.error(e)
   }
 }
@@ -154,9 +194,30 @@ onMounted(() => {
                 <div class="w-3 h-3 rounded-full bg-purple-200 group-hover:bg-purple-500 transition"></div>
                 <div class="w-0.5 h-full bg-gray-100 mt-1" v-if="index !== day.activities.length - 1"></div>
               </div>
+
+              <div class="pb-2 flex-1">
+                <div class="flex justify-between items-start">
+                  <h4 class="font-bold text-gray-800 text-lg">{{ activity.title }}</h4>
+
+                  
+                   <button 
+                      @click="openEditModal(activity)"
+                      class="text-gray-300 hover:text-blue-500"
+                      title="edit Activity"
+                    >
+                      ✏️
+                    </button>
+                  
+                  <button 
+                    @click="deleteActivity(activity.id)"
+                    class="opacity-0 group-hover:opacity-100 text-gray-300 hover:text-red-500 transition px-2"
+                    title="Remove Activity"
+                  >
+                    🗑️
+                  </button>
+                </div>
               
-              <div class="pb-2">
-                <h4 class="font-bold text-gray-800 text-lg">{{ activity.title }}</h4>
+              
                 <p class="text-sm text-gray-500 mb-1 flex items-center gap-1">
                   📍 {{ activity.location }}
                 </p>
@@ -170,5 +231,55 @@ onMounted(() => {
     </div>
 
   </div>
+
+
+  <div v-if="editingActivity" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+      <div class="bg-white p-6 rounded-xl shadow-2xl w-full max-w-md">
+        <h3 class="text-xl font-bold mb-4">edit activity</h3>
+        
+        <div class="space-y-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">activity title</label>
+            <input 
+              v-model="editingActivity.title" 
+              class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-purple-500 outline-none"
+            />
+          </div>
+          
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">location</label>
+            <input 
+              v-model="editingActivity.location" 
+              class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-purple-500 outline-none"
+            />
+          </div>
+          
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">description</label>
+            <textarea 
+              v-model="editingActivity.description" 
+              rows="3"
+              class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-purple-500 outline-none"
+            ></textarea>
+          </div>
+        </div>
+
+        <div class="flex justify-end gap-3 mt-6">
+          <button 
+            @click="editingActivity = null"
+            class="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg"
+          >
+            Cancel
+          </button>
+          <button 
+            @click="saveActivity"
+            class="px-4 py-2 bg-purple-600 text-white hover:bg-purple-700 rounded-lg font-medium"
+          >
+            Save Changes
+          </button>
+        </div>
+      </div>
+    </div>
+
   <div v-else class="text-center p-20">Loading...</div>
 </template>

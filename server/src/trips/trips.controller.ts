@@ -59,4 +59,19 @@ export class TripsController {
   remove(@Param('id') id: string) {
     return this.tripsService.remove(id);
   }
+
+  // 删除单个活动的 API
+  @Delete('activities/:id')
+  removeActivity(@Param('id') id: string) {
+    return this.tripsService.removeActivity(id);
+  }
+
+  // 更新活动的接口
+  @Patch('activities/:id')
+  updateActivity(
+    @Param('id') id: string,
+    @Body() body: { title?: string; location?: string; description?: string },
+  ) {
+    return this.tripsService.updateActivity(id, body);
+  }
 }

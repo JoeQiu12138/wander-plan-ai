@@ -92,7 +92,7 @@ export class TripsService {
         const dayId = trip.days[dayIndex].id;
 
         // 先清空这一天旧的活动 (可选，防止重复生成堆积)
-        await this.prisma.tripActivity.deleteMany({ where: { tripDayId: dayId }});
+        //await this.prisma.tripActivity.deleteMany({ where: { tripDayId: dayId }});
 
         // 插入新活动
         for (const activity of dayPlan.activities) {
@@ -128,6 +128,21 @@ export class TripsService {
   async remove(id: string) {
     return this.prisma.trip.delete({
       where: { id },
+    });
+  }
+
+  // 删除单个活动
+  async removeActivity(activityId: string) {
+    return this.prisma.tripActivity.delete({
+      where: { id: activityId },
+    });
+  }
+
+  // 更新活动
+  async updateActivity(activityId: string, data: { title?: string; location?: string; description?: string }) {
+    return this.prisma.tripActivity.update({
+      where: { id: activityId },
+      data,
     });
   }
 }
