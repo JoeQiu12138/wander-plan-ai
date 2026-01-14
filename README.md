@@ -56,7 +56,7 @@ Here's a quick look at WanderPlan AI in action:
 ![Home Page Demo](./assets/HomePageView.png)
 
 ### AI-Generated Trip Detail
-![Detail Page Demo](./assets/TripDetailView.png)
+![Detail Page Demo](./assets/TripDetailView2.0.png)
 
 ---
 
